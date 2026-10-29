@@ -360,7 +360,8 @@ for p in PLACEMENTS:
         a = push_vals(a_runs(p), tc)
         c = push_vals([RUNS["C"][p]], tc)
         U, pv = mwu(a, c)
-        da, dc = med_ci(a), med_ci(c)
+        # Set A: run-level interval, as in the text; Set C (one run): median only
+        da, dc = med_ci_runs(a_runs(p), tc), med_ci(c)
         ph = {}
         for phase in ("request_to_provider", "provider_to_dp", "dp_to_source", "source_to_received"):
             ma = float(np.median(push_phase(a_runs(p), tc, phase)))
@@ -384,12 +385,13 @@ N["setA_settings"] = {p: {k: load(a_runs(p)[0])["meta"].get(k) for k in ("timing
 fig, axs = plt.subplots(1, 3, figsize=(WIDTH, 3.3), sharey=True)
 for ax, tc in zip(axs, TCS):
     for i, p in enumerate(PLACEMENTS):
-        for dx, key, mk, fill in ((-0.15, "A", "o", COLOR[p]), (0.15, "C", "s", "white")):
-            d = factors[p][tc][key]
-            ax.errorbar(i + dx, d["median"], yerr=[[d["median"] - d["ci95"][0]], [d["ci95"][1] - d["median"]]],
-                        marker=mk, ms=6, color=COLOR[p], mfc=fill, capsize=3, lw=1.2)
+        a, c = factors[p][tc]["A"], factors[p][tc]["C"]
+        ax.errorbar(i - 0.15, a["median"], yerr=[[a["median"] - a["ci95"][0]], [a["ci95"][1] - a["median"]]],
+                    marker="o", ms=6, color=COLOR[p], mfc=COLOR[p], capsize=3, lw=1.2)
+        # Set C has one run: no interval is drawn (thesis Section 3.4)
+        ax.plot(i + 0.15, c["median"], marker="s", ms=6, color=COLOR[p], mfc="white", ls="")
         f = factors[p][tc]
-        ax.text(i, f["C"]["ci95"][1] * 1.12, f"×{f['ratio']:.1f}",
+        ax.text(i, f["C"]["median"] * 1.3, f"×{f['ratio']:.1f}",
                 ha="center", va="bottom", fontsize=7 * FS)
     ax.set_xticks(range(3), [LABEL[p] for p in PLACEMENTS])
     ax.set_title(TC_LABEL[tc], fontsize=8 * FS)
@@ -403,7 +405,7 @@ axs[0].set_ylabel("median push time (ms, log)")
 handles = [Line2D([], [], marker="o", ls="", color="0.3", ms=5, label="Set A: diagnostic profile, 3 runs"),
            Line2D([], [], marker="s", ls="", color="0.3", mfc="white", ms=5,
                   label="Set C: EDC defaults, 1 run"),
-           Line2D([], [], marker="", ls="-", color="0.3", lw=1.2, label="bar: 95 % CI of the median"),
+           Line2D([], [], marker="", ls="-", color="0.3", lw=1.2, label="bar (Set A): run-level 95 % CI"),
            Line2D([], [], ls="", label="×n: Set C median ÷ Set A median")]
 fig.legend(handles=handles, loc="lower center", ncol=2, frameon=False, fontsize=7.5 * FS, bbox_to_anchor=(0.5, -0.16))
 fig.tight_layout()
