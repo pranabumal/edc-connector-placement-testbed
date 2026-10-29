@@ -513,26 +513,42 @@ def fig_r4():
 
 
 def fig_r5():
-    fig, axes = plt.subplots(1, 3, figsize=(WIDTH, 3.0))
+    # Review of 29 Oct 2026 (K. Mätäsniemi): show the extremes, not only the box. Every box also
+    # marks its fastest fetch (▼) and its slowest (▲ at the top of the axis, value in seconds),
+    # because the slowest fetches lie far above the boxes.
+    top = {"tc1": 100, "tc2": 120, "tc3": 1000}
+    fig, axes = plt.subplots(1, 3, figsize=(WIDTH, 3.3))
     for ax, tc in zip(axes, TCS):
+        ax.set_ylim(0, top[tc])
         for i, pl in enumerate(PLACEMENTS):
             for off, mode, col in ((-0.17, "seq", COLOR[pl]), (0.17, "src", COLOR["source"])):
-                v = pull_fetches(pl, mode, tc)
-                bp = ax.boxplot([v], positions=[i + off], widths=0.28, whis=(5, 95), showfliers=False,
+                v = np.asarray(pull_fetches(pl, mode, tc))
+                x = i + off
+                bp = ax.boxplot([v], positions=[x], widths=0.28, whis=(5, 95), showfliers=False,
                                 patch_artist=True, medianprops={"color": "black", "lw": 1},
                                 boxprops={"lw": 0.6}, whiskerprops={"lw": 0.6}, capprops={"lw": 0.6})
                 bp["boxes"][0].set_facecolor(col)
                 bp["boxes"][0].set_alpha(0.75 if mode == "seq" else 0.45)
-        ax.set_xticks(range(3), [LABEL[p] for p in PLACEMENTS])
-        ax.set_title(TC_LABEL[tc])
+                ax.plot([x], [v.min()], marker="v", ms=3.5, color="#333333", zorder=5)
+                if v.max() > top[tc]:
+                    ax.plot([x], [top[tc]], marker="^", ms=3.5, color="#333333", clip_on=False, zorder=5)
+                    ax.annotate(f"{v.max() / 1000:.2f}", (x, top[tc]), xytext=(0, 4), textcoords="offset points",
+                                rotation=90, ha="center", va="bottom", fontsize=6.5 * FS, color="#333333")
+                else:
+                    ax.plot([x], [v.max()], marker="^", ms=3.5, color="#333333", zorder=5)
+        ax.set_xticks(range(3), [LABEL[p] for p in PLACEMENTS], rotation=25, ha="right", rotation_mode="anchor")
+        ax.set_title(TC_LABEL[tc], pad=30)
         ax.grid(axis="y", color="#e5e5e5", lw=0.5)
         ax.set_axisbelow(True)
-        ax.set_ylim(bottom=0)
     axes[0].set_ylabel("fetch time (ms)")
+    from matplotlib.lines import Line2D
     handles = [plt.Rectangle((0, 0), 1, 1, color=COLOR[p], alpha=0.75) for p in PLACEMENTS] + \
-              [plt.Rectangle((0, 0), 1, 1, color=COLOR["source"], alpha=0.45)]
-    fig.legend(handles, [f"{LABEL[p]} (through EDC)" for p in PLACEMENTS] + [LABEL["source"] + ", same time window"],
-               loc="lower center", ncol=2, frameon=False, fontsize=7 * FS, bbox_to_anchor=(0.5, -0.16))
+              [plt.Rectangle((0, 0), 1, 1, color=COLOR["source"], alpha=0.45),
+               Line2D([], [], marker="v", ls="", color="#333333", ms=3.5),
+               Line2D([], [], marker="^", ls="", color="#333333", ms=3.5)]
+    labels = [f"{LABEL[p]} (through EDC)" for p in PLACEMENTS] + [LABEL["source"] + ", same time window",
+              "fastest fetch", "slowest fetch (s, above the axis)"]
+    fig.legend(handles, labels, loc="lower center", ncol=2, frameon=False, fontsize=7 * FS, bbox_to_anchor=(0.5, -0.24))
     fig.tight_layout()
     savefig(fig, "R5_pull_fetch")
 
