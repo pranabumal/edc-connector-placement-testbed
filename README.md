@@ -35,7 +35,11 @@ python3 -m venv analysis/.venv && . analysis/.venv/bin/activate
 pip install -r analysis/requirements.txt
 python analysis/rq1.py && python analysis/rq2.py && python analysis/rq3.py
 python analysis/perf_models.py && python analysis/review_rerun.py && python analysis/repeats_BD.py
+python analysis/spread.py && python analysis/fig_simple.py     # need the output of rq1.py
 ```
+
+Figure PDFs go to `figures/images/`; tables, numbers (JSON) and PNG previews to
+`analysis/out/`.
 
 Every bootstrap uses a fixed seed, so the numbers are identical on every run.
 Appendix B of the thesis lists which script produces which figure or table.

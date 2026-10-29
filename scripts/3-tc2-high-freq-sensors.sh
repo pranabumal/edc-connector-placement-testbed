@@ -2,7 +2,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # 3-tc2-high-freq-sensors.sh
 # Test Case 2: High-frequency sensor batch transfer
-# Each transfer delivers 1 second of 1 kHz vibration data (~50 KB).
+# Each transfer delivers 1 second of 1 kHz vibration data (9,640 bytes).
 # Measures batch throughput and latency through the dataspace.
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail

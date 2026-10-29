@@ -227,7 +227,7 @@ def placement(arch, rtt, nruns):
     s.label(con_x + 168, 250, ["(1)"], anchor="start", size=14)
     y2 = R1 + R1H / 2
     s.arrow([(con_x + NW, y2), (prov_x, y2)], both=True)
-    s.label((con_x + NW + prov_x) / 2, y2 - 22, ["(2) DSP", f"RTT {ms(r('consumer', cp))}"], bg=True)
+    s.label((con_x + NW + prov_x) / 2, y2 - 28, ["(2) DSP", f"RTT {ms(r('consumer', cp))}"], bg=True)  # clear of its arrow
     s.arrow([(prov_x + 165, R1 + R1H), (prov_x + 165, R2)])
     s.label(prov_x + 157, 228 if same else 200, ["(3)", "same machine" if same else f"RTT {ms(r(cp, dp))}"],
             anchor="end", size=14)   # Hybrid: above the cloud machine's spec lines
@@ -235,12 +235,13 @@ def placement(arch, rtt, nruns):
     # Data (orange, in the direction the data move)
     y4 = R2 + R2H / 2
     s.arrow([(src_x, y4), (prov_x + NW, y4)], DATA)
-    s.label((prov_x + NW + src_x) / 2, y4 - 22, ["(4)", f"RTT {ms(r(dp, 'source'))}"], bg=True)
+    s.label((prov_x + NW + src_x) / 2, y4 - 30, ["(4)", f"RTT {ms(r(dp, 'source'))}"], bg=True)  # clear of its arrow
     s.arrow([(prov_x, R2 + 26), (con_x + NW, R2 + 26)], DATA, dash="9 5")
-    s.label((con_x + NW + prov_x) / 2, R2 + 4, ["(6) pull", f"RTT {ms(r('consumer', dp))}"], bg=True)
+    # (6) above its dashed arrow, so that the label does not cover it (review of 29 Oct 2026)
+    s.label((con_x + NW + prov_x) / 2, R2 - 14, ["(6) pull", f"RTT {ms(r('consumer', dp))}"], bg=True)
     yr = RCV_Y + R2H / 2
     s.arrow([(prov_x, R2 + 64), (225, R2 + 64), (225, yr), (con_x + NW, yr)], DATA)
-    s.label(262, R2 + 96, ["(5) push", f"RTT {ms(r('consumer', dp))}"], bg=True)
+    s.label(231, R2 + 96, ["(5) push", f"RTT {ms(r('consumer', dp))}"], anchor="start", bg=True, size=13)  # right of the line
     s.add("</g>")
     s.legend([("ctrl", "control message"), ("data", "data (push and source)"),
               ("data-dash", "data fetched in pull"), ("site", "site")])

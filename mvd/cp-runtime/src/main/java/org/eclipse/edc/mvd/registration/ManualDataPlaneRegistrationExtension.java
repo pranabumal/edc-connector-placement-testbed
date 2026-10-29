@@ -15,11 +15,10 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * EDC 0.14.1's data-plane-self-registration extension requires the Data Plane
- * to be in the same process as the Control Plane's DataPlaneSelectorService
- * (it calls addInstance() in-process, not over HTTP), and the Management API
- * exposes no POST/registration endpoint for data plane instances — only GET.
- * So a genuinely separate Data Plane process cannot self-register.
+ * EDC 0.14.1 can register a separate Data Plane over HTTP: the Data Plane's
+ * data-plane-self-registration calls a remote DataPlaneSelectorService
+ * (data-plane-selector-client), which posts to the Control Plane's
+ * data-plane-selector-control-api. This testbed does not use that path.
  *
  * This extension runs on the Control Plane instead and registers a remote
  * Data Plane's known, static capabilities (HttpData source/sink via

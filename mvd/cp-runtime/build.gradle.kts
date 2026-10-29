@@ -7,8 +7,8 @@ plugins {
 // ─────────────────────────────────────────────────────────────────────────────
 // Control Plane runtime — no data-plane-core/data-plane-http on the classpath.
 // Talks to a remote Data Plane runtime over the data-plane-signaling protocol:
-// hosts the selector registry (edc.dpf.selector.url) that the Data Plane
-// self-registers into, and calls out to the Data Plane's signaling API to
+// hosts the selector registry in which ManualDataPlaneRegistrationExtension
+// registers the Data Plane, and calls out to the Data Plane's signaling API to
 // start/suspend/terminate transfers.
 // ─────────────────────────────────────────────────────────────────────────────
 dependencies {
@@ -31,8 +31,8 @@ dependencies {
     // IAM mock (no real identity provider needed for testing)
     implementation(libs.edc.iam.mock)
 
-    // Data plane selector registry — lives on the Control Plane; the Data
-    // Plane runtime registers itself here via edc.dpf.selector.url
+    // Data plane selector registry — lives on the Control Plane; the remote
+    // Data Plane is registered here by ManualDataPlaneRegistrationExtension
     implementation(libs.edc.data.plane.selector.core)
     implementation(libs.edc.data.plane.selector.api)
 

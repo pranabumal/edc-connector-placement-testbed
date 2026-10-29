@@ -6,9 +6,9 @@ plugins {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Data Plane runtime — no control-plane-core/management-api/dsp on the
-// classpath. Self-registers with a remote Control Plane's selector registry
-// (edc.dpf.selector.url) on boot, and exposes the data-plane-signaling API so
-// the Control Plane can start/suspend/terminate transfers on this runtime.
+// classpath. The Control Plane registers it in its selector registry (see
+// cp-runtime's ManualDataPlaneRegistrationExtension), and it exposes the
+// data-plane-signaling API so the Control Plane can start/suspend/terminate transfers on this runtime.
 // ─────────────────────────────────────────────────────────────────────────────
 dependencies {
     // Core runtime
@@ -52,13 +52,11 @@ dependencies {
     implementation(libs.edc.web.spi)
     implementation(libs.jakarta.rsApi)
     //
-    // data-plane-self-registration is NOT used here: in EDC 0.14.1 it calls
-    // DataPlaneSelectorService.addInstance() in-process, which only exists on
-    // the Control Plane's classpath, and the Management API exposes no
-    // registration endpoint (GET only) — so a genuinely separate Data Plane
-    // process cannot self-register over HTTP. Registration instead happens
-    // from the Control Plane side (see cp-runtime's
-    // ManualDataPlaneRegistrationExtension).
+    // data-plane-self-registration is NOT used here. EDC 0.14.1 can register a
+    // separate Data Plane over HTTP (data-plane-selector-client on the Data
+    // Plane, data-plane-selector-control-api on the Control Plane), but this
+    // testbed registers it from the Control Plane side instead (see
+    // cp-runtime's ManualDataPlaneRegistrationExtension).
 
     // Data plane signaling API — exposed by the Data Plane so a remote
     // Control Plane can drive the transfer lifecycle over HTTP

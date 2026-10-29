@@ -68,7 +68,7 @@ def tc1_control_signal():
 # TC-2: High-frequency sensor batch
 # Simulates a vibration accelerometer at 1 kHz, returning a batch of
 # 1000 readings (~1 second of data) as a single HTTP response.
-# Payload is large (~50 KB JSON).
+# Payload: 9,640 bytes of JSON.
 # ─────────────────────────────────────────────────────────────────────────────
 @app.route("/tc2/sensor-batch", methods=["GET"])
 def tc2_sensor_batch():
@@ -110,7 +110,7 @@ def tc2_sensor_batch():
 # Simulates a 640x480 camera frame. The EDC transport overhead per frame
 # makes true 24fps through EDC impractical — this endpoint is used to
 # measure what throughput is actually achievable.
-# Payload: ~15-20 KB (compressed JPEG simulation via structured bytes).
+# Payload: 473,603 bytes of JSON (zlib-compressed RGB gradient, Base64).
 # ─────────────────────────────────────────────────────────────────────────────
 @app.route("/tc3/video-frame", methods=["GET"])
 def tc3_video_frame():
