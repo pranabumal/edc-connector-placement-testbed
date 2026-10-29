@@ -1,0 +1,54 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Unit: provider-dp — Provider Data Plane + its own database
+#
+#   provider-dp      fetches from the data source, pushes to the consumer's receiver
+#   provider-dp-db   data flows (one row per transfer) and access tokens
+#
+# Reaches out to:  provider-source (${SOURCE_HOST}:5050 / :8091, the data),
+#                  provider-cp (${PROVIDER_CP_HOST}:8185, transfer status),
+#                  receiver (${CONSUMER_DP_HOST}:4000, push destination)
+# Reached by:      provider-cp (data-plane signaling :8285)
+#
+# Start through deploy/deploy.sh, which resolves the *_HOST variables.
+# ─────────────────────────────────────────────────────────────────────────────
+name: provider-dp
+
+services:
+
+  provider-dp:
+    extends:
+      file: ../common.yaml
+      service: connector
+    build:
+      context: ../../..
+      dockerfile: docker/Dockerfile.dp
+    image: mvd-dp-runtime
+    container_name: provider-dp
+    environment:
+      EDC_DATASOURCE_DEFAULT_URL: jdbc:postgresql://provider-dp-db:5432/provider_dp
+      EDC_HOSTNAME: "${PROVIDER_DP_HOST:?}"
+      EDC_DATAPLANE_API_PUBLIC_BASEURL: "http://${PROVIDER_DP_HOST}:8284/public/"
+    command:
+      - -Dedc.fs.config=/config/provider-dp-config.properties
+      - -jar
+      - /app/dp-connector.jar
+    ports:
+      - "${BIND_ADDR:-0.0.0.0}:8281:8281"   # health / default API
+      - "${BIND_ADDR:-0.0.0.0}:8284:8284"   # data plane public (PULL)
+      - "${BIND_ADDR:-0.0.0.0}:8285:8285"   # data-plane signaling (called by provider-cp)
+    depends_on:
+      provider-dp-db:
+        condition: service_healthy
+
+  provider-dp-db:
+    extends:
+      file: ../common.yaml
+      service: postgres
+    container_name: provider-dp-db
+    environment:
+      POSTGRES_DB: provider_dp
+    volumes:
+      - provider-dp-db-data:/var/lib/postgresql/data
+
+volumes:
+  provider-dp-db-data:

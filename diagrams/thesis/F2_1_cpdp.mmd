@@ -1,0 +1,17 @@
+%% F2.1 Control Plane and Data Plane in an EDC connector; DSP between two connectors
+flowchart LR
+  subgraph P["Provider connector"]
+    direction TB
+    PCP["<b>Control Plane</b><br/>catalogue · contract negotiation ·<br/>transfer process management ·<br/>policy evaluation"]
+    PDP["<b>Data Plane</b><br/>moves the data ·<br/>checks access tokens"]
+    PCP -->|"Data Plane Signaling"| PDP
+  end
+  subgraph C["Consumer connector"]
+    direction TB
+    CCP["<b>Control Plane</b><br/>catalogue · contract negotiation ·<br/>transfer process management ·<br/>policy evaluation"]
+    CDP["<b>Data Plane</b>"]
+    CCP -->|"Data Plane Signaling"| CDP
+  end
+  SRC[("Data source")] --> PDP
+  PCP <==>|"Dataspace Protocol (DSP):<br/>catalogue · negotiation · transfer"| CCP
+  PDP ==>|"data"| DEST["Consumer Data Plane<br/>or consumer endpoint"]

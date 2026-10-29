@@ -1,0 +1,60 @@
+%%{init: {'theme': 'neutral', 'themeVariables': {'noteBkgColor': '#fff6bf', 'noteBorderColor': '#c9b200', 'noteTextColor': '#222222'}, 'sequence': {'actorMargin': 35, 'messageMargin': 22, 'boxMargin': 6}}}%%
+sequenceDiagram
+    autonumber
+    box rgb(238,238,238) Consumer - Contabo
+    participant R as Test runner
+    participant CC as Consumer CP
+    participant CD as Consumer DP
+    end
+    box rgb(226,240,255) cPouta - cloud
+    participant PC as Provider CP
+    participant PD as Provider DP
+    end
+    box rgb(240,234,250) TAU VM 2 - data source
+    participant S as Data source
+    end
+
+    Note over R,S: Cloud: provider CP and DP on cPouta
+    Note over R,S: Network RTT: consumer to provider CP 46 ms | provider CP to DP same host | provider DP to source 8 ms | consumer to provider DP 46 ms
+    Note over R,S: Pull, EDC wait 50 ms, 4 CPU / 4 GB per connector
+
+    rect rgb(255,235,210)
+    Note over R,S: TC3: video frame, 473,603 B (source /tc3/video-frame)
+    R->>CC: Catalog request
+    CC->>PC: Catalog request (DSP)
+    PC-->>CC: Catalog with offers
+    CC-->>R: Catalog with offers
+    Note over CC,PC: 1) Catalog: 362 ms
+    R->>CC: Start negotiation
+    CC->>PC: Contract request
+    PC-->>CC: Contract agreement
+    CC->>PC: Verify agreement
+    PC-->>CC: Agreement finalized
+    loop negotiationPoll
+        R->>CC: Poll state, every 0.1 s
+    end
+    Note over CC,PC: 2) Negotiation: 2,564 ms
+    R->>CC: Start pull transfer
+    CC->>PC: Transfer request
+    PC->>PD: Start data flow
+    PD-->>PC: Endpoint and token
+    PC-->>CC: Transfer start, token
+    loop edrPoll
+        R->>CC: Poll endpoint and token
+    end
+    Note over CC,PC: 3a) Transfer setup, once: 374 ms
+    loop 30 fetches
+        R->>CD: GET data of the transfer, no token
+        opt first fetch only
+            CD->>CC: Get endpoint and token
+            CC-->>CD: Endpoint and token
+        end
+        CD->>PD: GET data with token
+        PD->>S: GET payload
+        S-->>PD: Payload
+        PD-->>CD: Payload
+        CD-->>R: Payload
+    end
+    Note over CD,S: 3b) Fetch: 322.6 ms median, first 652.6 ms
+    Note over R,S: Total TC3 to first data: 3,953 ms
+    end

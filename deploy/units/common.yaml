@@ -1,0 +1,54 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Shared service definitions, pulled into each unit with `extends:`.
+# Not a runnable compose file on its own.
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # One Postgres per connector unit ({unit}-db). Never published on the host:
+  # only its own connector, on the unit's private network, can reach it.
+  postgres:
+    image: postgres:16-alpine
+    # synchronous_commit=off (timing profile tuned-nosync) lets a commit return
+    # before its WAL record is flushed to disk — removes the disk's sync-write
+    # latency from every EDC state change, to test how much of a placement's
+    # result comes from that machine's storage.
+    command: ["postgres", "-c", "synchronous_commit=${DB_SYNCHRONOUS_COMMIT:-on}"]
+    environment:
+      POSTGRES_USER: edc
+      POSTGRES_PASSWORD: "${DB_PASSWORD:?DB_PASSWORD not set — run via deploy/deploy.sh}"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U edc"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256m
+    restart: unless-stopped
+
+  # Base for all four EDC runtimes. The unit sets image, command, ports and the
+  # EDC_* overrides; EDC maps each EDC_FOO_BAR env var onto the edc.foo.bar key
+  # in mvd/resources/configuration/<unit>-config.properties.
+  connector:
+    volumes:
+      # Relative to THIS file (deploy/units/), not to the unit extending it
+      - ../../mvd/resources/configuration:/config:ro
+    environment:
+      EDC_DATASOURCE_DEFAULT_PASSWORD: "${DB_PASSWORD:?DB_PASSWORD not set — run via deploy/deploy.sh}"
+      # Timing profile (deploy/timing/*.env): EDC state-machine wait, as -D
+      # system properties. Empty = EDC defaults.
+      JAVA_TOOL_OPTIONS: "${EDC_JAVA_OPTS:-}"
+    extra_hosts:
+      # Lets a unit reach another unit on the same Linux host via its host
+      # address (Docker Desktop provides this on its own).
+      - "host.docker.internal:host-gateway"
+    deploy:
+      resources:
+        limits:
+          # Set per unit by deploy.sh from the tier it runs on (EDGE_* / CLOUD_*)
+          cpus: "${UNIT_CPU:-1.0}"
+          memory: "${UNIT_MEM:-1024m}"
+    restart: unless-stopped

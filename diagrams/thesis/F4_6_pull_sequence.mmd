@@ -1,0 +1,24 @@
+%% F4.6 Pull transfer (HttpData-PULL) in stock EDC 0.14.1; no measured values
+sequenceDiagram
+  autonumber
+  participant APP as Consumer application
+  participant CCP as Consumer CP
+  participant PCP as Provider CP
+  participant PDP as Provider DP
+  participant SRC as Data source
+  Note over APP,PCP: Once per contract (catalogue and negotiation as in push)
+  APP->>CCP: transfer request (HttpData-PULL)
+  CCP->>PCP: DSP transfer request
+  PCP->>PDP: data plane signalling: start
+  PDP-->>PCP: endpoint and access token (EDR)
+  PCP-->>CCP: DSP transfer start (EDR)
+  APP->>CCP: get EDR
+  CCP-->>APP: endpoint and token
+  loop Every fetch, until the transfer ends
+    APP->>PDP: GET endpoint (token)
+    PDP->>PDP: check token
+    PDP->>SRC: GET data
+    SRC-->>PDP: payload
+    PDP-->>APP: payload
+  end
+  Note over PCP,PDP: Policy monitor in the provider CP (about once per second): on expiry or termination, signal the DP to terminate, and later fetches are denied

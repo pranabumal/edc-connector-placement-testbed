@@ -1,0 +1,152 @@
+{
+  "hybrid": {
+    "architecture": "hybrid",
+    "run_dir": "results/20261013T165021-hybrid-tuned-nosync",
+    "timing_profile": "tuned-nosync",
+    "via": "consumer-dp",
+    "edc_transfer_wait_ms": 50,
+    "provider_cp_role": "cloud",
+    "provider_dp_role": "edge",
+    "rtt_ms": {
+      "consumer_to_provider_cp": 45.492,
+      "provider_cp_to_dp": 7.736,
+      "provider_dp_to_source": 13.801,
+      "consumer_to_provider_dp": 41.002
+    },
+    "test_cases": {
+      "TC1": {
+        "size_bytes": 272,
+        "fetches": 30,
+        "catalog_ms": 940.0,
+        "negotiation_ms": 2647.0,
+        "setup_ms": 830.29,
+        "first_fetch_ms": 729.81,
+        "fetch_median_ms": 80.73,
+        "total_to_first_data_ms": 5147.1,
+        "negotiation_retries": 0
+      },
+      "TC2": {
+        "size_bytes": 9640,
+        "fetches": 30,
+        "catalog_ms": 352.0,
+        "negotiation_ms": 2055.0,
+        "setup_ms": 314.16,
+        "first_fetch_ms": 231.64,
+        "fetch_median_ms": 76.37,
+        "total_to_first_data_ms": 2952.8,
+        "negotiation_retries": 0
+      },
+      "TC3": {
+        "size_bytes": 473603,
+        "fetches": 30,
+        "catalog_ms": 343.0,
+        "negotiation_ms": 2725.0,
+        "setup_ms": 329.42,
+        "first_fetch_ms": 511.55,
+        "fetch_median_ms": 314.94,
+        "total_to_first_data_ms": 3909.0,
+        "negotiation_retries": 0
+      }
+    }
+  },
+  "edge": {
+    "architecture": "edge",
+    "run_dir": "results/20261013T171108-edge-tuned-nosync",
+    "timing_profile": "tuned-nosync",
+    "via": "consumer-dp",
+    "edc_transfer_wait_ms": 50,
+    "provider_cp_role": "edge",
+    "provider_dp_role": "edge",
+    "rtt_ms": {
+      "consumer_to_provider_cp": 40.395,
+      "provider_cp_to_dp": null,
+      "provider_dp_to_source": 2.493,
+      "consumer_to_provider_dp": 40.395
+    },
+    "test_cases": {
+      "TC1": {
+        "size_bytes": 272,
+        "fetches": 30,
+        "catalog_ms": 768.0,
+        "negotiation_ms": 2319.0,
+        "setup_ms": 822.03,
+        "first_fetch_ms": 505.7,
+        "fetch_median_ms": 73.53,
+        "total_to_first_data_ms": 4414.7,
+        "negotiation_retries": 0
+      },
+      "TC2": {
+        "size_bytes": 9640,
+        "fetches": 30,
+        "catalog_ms": 325.0,
+        "negotiation_ms": 2740.0,
+        "setup_ms": 359.65,
+        "first_fetch_ms": 192.84,
+        "fetch_median_ms": 78.09,
+        "total_to_first_data_ms": 3617.5,
+        "negotiation_retries": 0
+      },
+      "TC3": {
+        "size_bytes": 473603,
+        "fetches": 30,
+        "catalog_ms": 357.0,
+        "negotiation_ms": 2288.0,
+        "setup_ms": 301.65,
+        "first_fetch_ms": 673.13,
+        "fetch_median_ms": 348.05,
+        "total_to_first_data_ms": 3619.8,
+        "negotiation_retries": 0
+      }
+    }
+  },
+  "cloud": {
+    "architecture": "cloud",
+    "run_dir": "results/20261013T172020-cloud-tuned-nosync",
+    "timing_profile": "tuned-nosync",
+    "via": "consumer-dp",
+    "edc_transfer_wait_ms": 50,
+    "provider_cp_role": "cloud",
+    "provider_dp_role": "cloud",
+    "rtt_ms": {
+      "consumer_to_provider_cp": 45.673,
+      "provider_cp_to_dp": null,
+      "provider_dp_to_source": 7.837,
+      "consumer_to_provider_dp": 45.673
+    },
+    "test_cases": {
+      "TC1": {
+        "size_bytes": 272,
+        "fetches": 30,
+        "catalog_ms": 921.0,
+        "negotiation_ms": 2487.0,
+        "setup_ms": 586.88,
+        "first_fetch_ms": 574.24,
+        "fetch_median_ms": 95.95,
+        "total_to_first_data_ms": 4569.1,
+        "negotiation_retries": 0
+      },
+      "TC2": {
+        "size_bytes": 9640,
+        "fetches": 30,
+        "catalog_ms": 288.0,
+        "negotiation_ms": 2228.0,
+        "setup_ms": 331.92,
+        "first_fetch_ms": 241.98,
+        "fetch_median_ms": 97.78,
+        "total_to_first_data_ms": 3089.9,
+        "negotiation_retries": 0
+      },
+      "TC3": {
+        "size_bytes": 473603,
+        "fetches": 30,
+        "catalog_ms": 362.0,
+        "negotiation_ms": 2564.0,
+        "setup_ms": 374.07,
+        "first_fetch_ms": 652.57,
+        "fetch_median_ms": 322.55,
+        "total_to_first_data_ms": 3952.6,
+        "negotiation_retries": 0
+      }
+    }
+  }
+}

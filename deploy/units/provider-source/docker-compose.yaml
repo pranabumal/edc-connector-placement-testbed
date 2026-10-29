@@ -1,0 +1,88 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Unit: provider-source — the factory's data source ("the machine"), VM 2
+#
+#   simulator       synthetic overhead-crane data for TC-1..TC-4
+#   basyx-aas       BaSyx AAS environment — the crane's digital twin
+#   basyx-mongo     storage for the AAS environment
+#   crane-adapter   copies simulator values into the AAS submodels
+#
+# Pinned to the SOURCE role in every architecture: the provider's Data Plane
+# reads from here wherever it runs, so in the Cloud architecture the data
+# really crosses the factory → cloud link (thesis Table 2.1).
+#
+# Reached by:  provider-dp (simulator :5050, AAS :8091),
+#              scripts / dashboard (TC-4 trigger :5050)
+#
+# Not an EDC unit: no database password, no connector resource cap — its
+# resources are not part of the measurements.
+#
+# Start through deploy/deploy.sh.
+# ─────────────────────────────────────────────────────────────────────────────
+name: provider-source
+
+services:
+
+  simulator:
+    build:
+      context: ../../../docker/simulator
+    container_name: data-simulator
+    environment:
+      # TC-4: hand each alert to the adapter as it fires (written into the AAS)
+      ADAPTER_URL: http://crane-adapter:8099
+    ports:
+      # 5050 on the host (5000 collides with macOS AirPlay Receiver)
+      - "${BIND_ADDR:-0.0.0.0}:5050:5000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  basyx-mongo:
+    image: mongo:5.0.10
+    container_name: basyx-mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: basyx
+      MONGO_INITDB_ROOT_PASSWORD: basyx   # never published; only basyx-aas reaches it
+    volumes:
+      - basyx-mongo-data:/data/db
+    restart: unless-stopped
+
+  basyx-aas:
+    image: eclipsebasyx/aas-environment:2.0.0-SNAPSHOT
+    container_name: basyx-aas
+    ports:
+      - "${BIND_ADDR:-0.0.0.0}:8091:8081"
+    environment:
+      SPRING_DATA_MONGODB_HOST: basyx-mongo
+      SPRING_DATA_MONGODB_PORT: 27017
+      SPRING_DATA_MONGODB_DATABASE: basyx
+      SPRING_DATA_MONGODB_USERNAME: basyx
+      SPRING_DATA_MONGODB_PASSWORD: basyx
+      SPRING_DATA_MONGODB_AUTHENTICATION_DATABASE: admin
+      BASYX_ENVIRONMENT: "file:/workspace/environments"
+    volumes:
+      - ../../../docker/basyx/aas-environment:/workspace/environments:ro
+    depends_on:
+      - basyx-mongo
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  crane-adapter:
+    build:
+      context: ../../../docker/basyx/crane-adapter
+    container_name: crane-adapter
+    depends_on:
+      basyx-aas:
+        condition: service_healthy
+      simulator:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  basyx-mongo-data:

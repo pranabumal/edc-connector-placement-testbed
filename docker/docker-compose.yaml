@@ -1,0 +1,381 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# EDC Test Plan — Full Docker Compose
+#
+# Core services (always started):
+#   provider-cp    — Provider Control Plane                             :8182
+#   provider-dp    — Provider Data Plane                                :8284
+#   consumer-cp    — Consumer Control Plane                             :9192
+#   consumer-dp    — Consumer Data Plane                                :9294
+#   simulator      — HTTP service serving TC-1/TC-2/TC-3/TC-4 test data :5000
+#   receiver       — HTTP service receiving EDC push transfers          :4000
+#   ui-api         — FastAPI backend (proxy + test orchestrator + SSE) :8090
+#   ui-provider    — React Provider Control Plane dashboard            :3000
+#   ui-consumer    — React Consumer dashboard                          :3001
+#
+# Optional Basyx services (crane real-data profile):
+#   basyx-aas      — BaSyx AAS Environment (crane digital twin API)    :8091
+#   basyx-mongo    — MongoDB backend for BaSyx                         :27017 (internal)
+#   crane-adapter  — Polls simulator → pushes into AAS submodel        :8099
+#
+# Usage:
+#   docker compose -f docker/docker-compose.yaml up --build
+#
+# With Basyx (real crane data):
+#   docker compose -f docker/docker-compose.yaml --profile basyx up --build
+#
+# Architecture variants (Cloud / Edge / Hybrid — see the
+# thesis Methods §3.3): Control Plane and Data Plane resource tiers are set
+# independently. Edge tier is the default (matches the original EDC Test
+# Plan's resource-constrained-container methodology); Cloud tier is
+# effectively generous/unconstrained by comparison.
+#
+#   Edge (default):     no env vars needed
+#   Cloud:               CP_CPU=4 CP_MEM=4096m DP_CPU=4 DP_MEM=4096m docker compose ... up --build
+#   Hybrid (CP cloud / DP edge):
+#                         CP_CPU=4 CP_MEM=4096m docker compose ... up --build
+# ─────────────────────────────────────────────────────────────────────────────
+
+x-cp-resources: &cp-resources
+  cpus: "${CP_CPU:-1.0}"
+  memory: "${CP_MEM:-1024m}"
+
+x-dp-resources: &dp-resources
+  cpus: "${DP_CPU:-1.0}"
+  memory: "${DP_MEM:-1024m}"
+
+# One Postgres per connector unit ({participant}-{plane}-db). Each plane owns
+# its state: CP = assets/policies/negotiations/transfers, DP = data flows/tokens.
+x-db: &db
+  image: postgres:16-alpine
+  environment: &db-env
+    POSTGRES_USER: edc
+    POSTGRES_PASSWORD: "${DB_PASSWORD:-edc}"
+  healthcheck:
+    test: ["CMD-SHELL", "pg_isready -U edc"]
+    interval: 5s
+    timeout: 3s
+    retries: 10
+  deploy:
+    resources:
+      limits:
+        cpus: "0.5"
+        memory: 256m
+  networks:
+    - dataspace-net
+
+services:
+
+  # ── Provider Control Plane ───────────────────────────────────────────────────
+  provider-cp:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.cp
+    image: mvd-cp-runtime
+    container_name: provider-cp
+    volumes:
+      - ../mvd/resources/configuration:/config:ro
+    environment:
+      EDC_DATASOURCE_DEFAULT_PASSWORD: "${DB_PASSWORD:-edc}"
+    command:
+      - -Dedc.fs.config=/config/provider-cp-config.properties
+      - -jar
+      - /app/cp-connector.jar
+    ports:
+      - "8181:8181"   # health / default API
+      - "8182:8182"   # management API
+      - "8183:8183"   # DSP protocol
+      - "8185:8185"   # control (internal only)
+    deploy:
+      resources:
+        limits: *cp-resources
+    depends_on:
+      provider-cp-db:
+        condition: service_healthy
+      provider-dp:
+        condition: service_started
+    networks:
+      - dataspace-net
+
+  # ── Provider Data Plane ──────────────────────────────────────────────────────
+  provider-dp:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dp
+    image: mvd-dp-runtime
+    container_name: provider-dp
+    volumes:
+      - ../mvd/resources/configuration:/config:ro
+    environment:
+      EDC_DATASOURCE_DEFAULT_PASSWORD: "${DB_PASSWORD:-edc}"
+    command:
+      - -Dedc.fs.config=/config/provider-dp-config.properties
+      - -jar
+      - /app/dp-connector.jar
+    ports:
+      - "8281:8281"   # health / default API
+      - "8284:8284"   # data plane public
+      - "8285:8285"   # control signaling (called by provider-cp)
+    deploy:
+      resources:
+        limits: *dp-resources
+    depends_on:
+      provider-dp-db:
+        condition: service_healthy
+      simulator:
+        condition: service_healthy
+    networks:
+      - dataspace-net
+
+  # ── Consumer Control Plane ───────────────────────────────────────────────────
+  consumer-cp:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.cp
+    image: mvd-cp-runtime
+    container_name: consumer-cp
+    volumes:
+      - ../mvd/resources/configuration:/config:ro
+    environment:
+      EDC_DATASOURCE_DEFAULT_PASSWORD: "${DB_PASSWORD:-edc}"
+    command:
+      - -Dedc.fs.config=/config/consumer-cp-config.properties
+      - -jar
+      - /app/cp-connector.jar
+    ports:
+      - "9191:9191"   # health / default API
+      - "9192:9192"   # management API
+      - "9193:9193"   # DSP protocol
+      - "9195:9195"   # control (internal only)
+    deploy:
+      resources:
+        limits: *cp-resources
+    depends_on:
+      consumer-cp-db:
+        condition: service_healthy
+      consumer-dp:
+        condition: service_started
+      provider-cp:
+        condition: service_started
+    networks:
+      - dataspace-net
+
+  # ── Consumer Data Plane ──────────────────────────────────────────────────────
+  consumer-dp:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dp
+    image: mvd-dp-runtime
+    container_name: consumer-dp
+    volumes:
+      - ../mvd/resources/configuration:/config:ro
+    environment:
+      EDC_DATASOURCE_DEFAULT_PASSWORD: "${DB_PASSWORD:-edc}"
+    command:
+      - -Dedc.fs.config=/config/consumer-dp-config.properties
+      - -jar
+      - /app/dp-connector.jar
+    ports:
+      - "9291:9291"   # health / default API
+      - "9294:9294"   # data plane public
+      - "9295:9295"   # control signaling (called by consumer-cp)
+    deploy:
+      resources:
+        limits: *dp-resources
+    depends_on:
+      consumer-dp-db:
+        condition: service_healthy
+    networks:
+      - dataspace-net
+
+  provider-cp-db:
+    <<: *db
+    container_name: provider-cp-db
+    environment:
+      <<: *db-env
+      POSTGRES_DB: provider_cp
+    volumes:
+      - provider-cp-db-data:/var/lib/postgresql/data
+
+  provider-dp-db:
+    <<: *db
+    container_name: provider-dp-db
+    environment:
+      <<: *db-env
+      POSTGRES_DB: provider_dp
+    volumes:
+      - provider-dp-db-data:/var/lib/postgresql/data
+
+  consumer-cp-db:
+    <<: *db
+    container_name: consumer-cp-db
+    environment:
+      <<: *db-env
+      POSTGRES_DB: consumer_cp
+    volumes:
+      - consumer-cp-db-data:/var/lib/postgresql/data
+
+  consumer-dp-db:
+    <<: *db
+    container_name: consumer-dp-db
+    environment:
+      <<: *db-env
+      POSTGRES_DB: consumer_dp
+    volumes:
+      - consumer-dp-db-data:/var/lib/postgresql/data
+
+  # ── Data Simulator ──────────────────────────────────────────────────────────
+  simulator:
+    build:
+      context: simulator
+      dockerfile: Dockerfile
+    container_name: data-simulator
+    ports:
+      # Host-side port 5000 collides with macOS AirPlay Receiver on many
+      # machines; mapped to 5050 on the host. Internal Docker network port
+      # stays 5000 — EDC assets reference simulator:5000 unchanged.
+      - "5050:5000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - dataspace-net
+
+  # ── Data Receiver ───────────────────────────────────────────────────────────
+  receiver:
+    build:
+      context: receiver
+      dockerfile: Dockerfile
+    container_name: data-receiver
+    ports:
+      - "4000:4000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:4000/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - dataspace-net
+
+  # ── UI Backend API ──────────────────────────────────────────────────────────
+  ui-api:
+    build:
+      context: ui-api
+      dockerfile: Dockerfile
+    container_name: ui-api
+    ports:
+      - "8090:8090"
+    volumes:
+      - ui-api-data:/data        # persists SQLite DB across restarts
+    environment:
+      DB_PATH: /data/consumer.db
+    depends_on:
+      receiver:
+        condition: service_healthy
+      simulator:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8090/api/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dataspace-net
+
+  # ── Provider Control Plane UI ───────────────────────────────────────────────
+  ui-provider:
+    build:
+      context: ui-provider
+      dockerfile: Dockerfile
+    container_name: ui-provider
+    ports:
+      - "3000:80"
+    depends_on:
+      ui-api:
+        condition: service_healthy
+    networks:
+      - dataspace-net
+
+  # ── Consumer Dashboard UI ───────────────────────────────────────────────────
+  ui-consumer:
+    build:
+      context: ui-consumer
+      dockerfile: Dockerfile
+    container_name: ui-consumer
+    ports:
+      # Host port 3001 collides with an unrelated native process on some
+      # machines (a stray dev server, etc.) — mapped to 3002 on the host.
+      - "3002:80"
+    depends_on:
+      ui-api:
+        condition: service_healthy
+    networks:
+      - dataspace-net
+
+  # ── BaSyx AAS Environment (optional — real crane data) ──────────────────────
+  basyx-mongo:
+    image: mongo:5.0.10
+    container_name: basyx-mongo
+    profiles: [basyx]
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: basyx
+      MONGO_INITDB_ROOT_PASSWORD: basyx
+    volumes:
+      - basyx-mongo-data:/data/db
+    networks:
+      - dataspace-net
+
+  basyx-aas:
+    image: eclipsebasyx/aas-environment:2.0.0-SNAPSHOT
+    container_name: basyx-aas
+    profiles: [basyx]
+    ports:
+      - "8091:8081"
+    environment:
+      SPRING_DATA_MONGODB_HOST: basyx-mongo
+      SPRING_DATA_MONGODB_PORT: 27017
+      SPRING_DATA_MONGODB_DATABASE: basyx
+      SPRING_DATA_MONGODB_USERNAME: basyx
+      SPRING_DATA_MONGODB_PASSWORD: basyx
+      SPRING_DATA_MONGODB_AUTHENTICATION_DATABASE: admin
+      BASYX_ENVIRONMENT: "file:/workspace/environments"
+    volumes:
+      - ./basyx/aas-environment:/workspace/environments:ro
+    depends_on:
+      - basyx-mongo
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    networks:
+      - dataspace-net
+
+  crane-adapter:
+    build:
+      context: basyx/crane-adapter
+      dockerfile: Dockerfile
+    container_name: crane-adapter
+    profiles: [basyx]
+    ports:
+      - "8099:8099"
+    depends_on:
+      basyx-aas:
+        condition: service_healthy
+      simulator:
+        condition: service_healthy
+    networks:
+      - dataspace-net
+
+networks:
+  dataspace-net:
+    driver: bridge
+
+volumes:
+  provider-cp-db-data:
+  provider-dp-db-data:
+  consumer-cp-db-data:
+  consumer-dp-db-data:
+  basyx-mongo-data:
+  ui-api-data:

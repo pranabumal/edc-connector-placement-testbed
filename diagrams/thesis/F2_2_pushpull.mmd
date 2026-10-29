@@ -1,0 +1,17 @@
+%% F2.2 Push and pull in the Dataspace Protocol: who starts the data movement, where the data goes
+flowchart TB
+  subgraph PULL["Pull"]
+    direction LR
+    A2["Consumer"] -->|"1 · transfer request"| B2["Provider<br/>Control Plane"]
+    B2 -->|"2 · endpoint and access token<br/>(Endpoint Data Reference)"| A2
+    A2 ==>|"3 · fetch with token<br/>(repeated)"| D2["Provider<br/>Data Plane<br/>(checks only the token)"]
+    S2[("Source")] -->|"data"| D2
+    D2 ==>|"4 · data in the response"| A2
+  end
+  subgraph PUSH["Push"]
+    direction LR
+    A1["Consumer"] -->|"1 · transfer request<br/>with its own destination"| B1["Provider<br/>Control Plane"]
+    B1 -->|"2 · start"| D1["Provider<br/>Data Plane"]
+    S1[("Source")] -->|"3 · data"| D1
+    D1 ==>|"4 · data sent<br/>to the destination"| E1["Consumer's<br/>destination"]
+  end

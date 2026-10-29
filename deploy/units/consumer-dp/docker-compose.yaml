@@ -1,0 +1,73 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Unit: consumer-dp — Consumer Data Plane + its own database + data sink
+#
+#   consumer-dp      consumer-side Data Plane. Stock EDC 0.14.1 gives it no
+#                    part in the data path (it can only prepare a destination)
+#   consumer-dp-db   data flows and access tokens
+#   receiver         push destination for TC-1..TC-4; logs arrival time,
+#                    payload size and latency
+#
+# Note: in HttpData-PUSH provider-dp pushes straight to the receiver, the
+# consumer's receiving endpoint, so consumer-dp is not on the data path. The
+# optional pull proxy (ConsumerPullProxyExtension, off) would put it on the
+# HttpData-PULL path; see consumer-dp-config.properties.
+#
+# Reached by:  consumer-cp (data-plane signaling :9295),
+#              provider-dp (push to receiver :4000), scripts (metrics :4000)
+#
+# Start through deploy/deploy.sh, which resolves the *_HOST variables.
+# ─────────────────────────────────────────────────────────────────────────────
+name: consumer-dp
+
+services:
+
+  consumer-dp:
+    extends:
+      file: ../common.yaml
+      service: connector
+    build:
+      context: ../../..
+      dockerfile: docker/Dockerfile.dp
+    image: mvd-dp-runtime
+    container_name: consumer-dp
+    environment:
+      EDC_DATASOURCE_DEFAULT_URL: jdbc:postgresql://consumer-dp-db:5432/consumer_dp
+      EDC_HOSTNAME: "${CONSUMER_DP_HOST:?}"
+      EDC_DATAPLANE_API_PUBLIC_BASEURL: "http://${CONSUMER_DP_HOST}:9294/public/"
+    command:
+      - -Dedc.fs.config=/config/consumer-dp-config.properties
+      - -jar
+      - /app/dp-connector.jar
+    ports:
+      - "${BIND_ADDR:-0.0.0.0}:9291:9291"   # health / default API
+      - "${BIND_ADDR:-0.0.0.0}:9294:9294"   # data plane public
+      - "${BIND_ADDR:-0.0.0.0}:9295:9295"   # data-plane signaling (called by consumer-cp)
+    depends_on:
+      consumer-dp-db:
+        condition: service_healthy
+
+  consumer-dp-db:
+    extends:
+      file: ../common.yaml
+      service: postgres
+    container_name: consumer-dp-db
+    environment:
+      POSTGRES_DB: consumer_dp
+    volumes:
+      - consumer-dp-db-data:/var/lib/postgresql/data
+
+  receiver:
+    build:
+      context: ../../../docker/receiver
+    container_name: data-receiver
+    ports:
+      - "${BIND_ADDR:-0.0.0.0}:4000:4000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:4000/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  consumer-dp-db-data:

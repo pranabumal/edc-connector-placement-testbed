@@ -1,0 +1,2 @@
+org.eclipse.edc.mvd.keys.DataPlaneTokenKeysExtension
+org.eclipse.edc.mvd.proxy.ConsumerPullProxyExtension

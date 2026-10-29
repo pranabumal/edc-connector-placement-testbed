@@ -1,0 +1,90 @@
+{
+  "assetAdministrationShells": [
+    {
+      "modelType": "AssetAdministrationShell",
+      "id": "urn:ilmatar:crane:aas:001",
+      "idShort": "IlmatarCraneAAS",
+      "displayName": [{"language": "en", "text": "Ilmatar Industrial Crane — Digital Twin"}],
+      "assetInformation": {
+        "assetKind": "Instance",
+        "globalAssetId": "urn:ilmatar:crane:asset:001"
+      },
+      "submodels": [
+        {"type": "ExternalReference", "keys": [{"type": "Submodel", "value": "urn:ilmatar:crane:sm:ControlSignal"}]},
+        {"type": "ExternalReference", "keys": [{"type": "Submodel", "value": "urn:ilmatar:crane:sm:SensorData"}]},
+        {"type": "ExternalReference", "keys": [{"type": "Submodel", "value": "urn:ilmatar:crane:sm:VideoStream"}]}
+      ]
+    }
+  ],
+  "submodels": [
+    {
+      "modelType": "Submodel",
+      "id": "urn:ilmatar:crane:sm:ControlSignal",
+      "idShort": "ControlSignal",
+      "displayName": [{"language": "en", "text": "Real-time Control Signal (TC-1)"}],
+      "description": [{"language": "en", "text": "Near-real-time position/velocity control data at ~50 Hz"}],
+      "submodelElements": [
+        {"modelType": "Property", "idShort": "actuator_id",   "valueType": "xs:string",  "value": "AGV-001"},
+        {"modelType": "Property", "idShort": "setpoint",      "valueType": "xs:double",  "value": "0.0"},
+        {"modelType": "Property", "idShort": "actual",        "valueType": "xs:double",  "value": "0.0"},
+        {"modelType": "Property", "idShort": "error",         "valueType": "xs:double",  "value": "0.0"},
+        {"modelType": "Property", "idShort": "velocity",      "valueType": "xs:double",  "value": "0.0"},
+        {"modelType": "Property", "idShort": "control_mode",  "valueType": "xs:string",  "value": "PID"},
+        {"modelType": "Property", "idShort": "frequency_hz",  "valueType": "xs:int",     "value": "50"},
+        {"modelType": "Property", "idShort": "timestamp_iso", "valueType": "xs:string",  "value": ""},
+        {"modelType": "Property", "idShort": "unit",          "valueType": "xs:string",  "value": "meters"}
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ilmatar:crane:sm:SensorData",
+      "idShort": "SensorData",
+      "displayName": [{"language": "en", "text": "High-Frequency Sensor Batch (TC-2)"}],
+      "description": [{"language": "en", "text": "1 kHz vibration accelerometer data, 1000 samples per batch"}],
+      "submodelElements": [
+        {"modelType": "Property", "idShort": "sensor_id",     "valueType": "xs:string", "value": "VIBRATION-001"},
+        {"modelType": "Property", "idShort": "sensor_type",   "valueType": "xs:string", "value": "accelerometer"},
+        {"modelType": "Property", "idShort": "location",      "valueType": "xs:string", "value": "machine_spindle"},
+        {"modelType": "Property", "idShort": "sample_rate_hz","valueType": "xs:int",    "value": "1000"},
+        {"modelType": "Property", "idShort": "sample_count",  "valueType": "xs:int",    "value": "1000"},
+        {"modelType": "Property", "idShort": "rms",           "valueType": "xs:double", "value": "0.0"},
+        {"modelType": "Property", "idShort": "dominant_freq_hz","valueType":"xs:double","value": "50.0"},
+        {"modelType": "Property", "idShort": "unit",          "valueType": "xs:string", "value": "m/s2"},
+        {"modelType": "Property", "idShort": "timestamp_iso", "valueType": "xs:string", "value": ""},
+        {
+          "modelType": "SubmodelElementCollection",
+          "idShort": "LastAlert",
+          "description": [{"language": "en", "text": "TC-4: most recent rms threshold-crossing alert. Written by the crane adapter when the alert fires; read by the provider's EDC Data Plane."}],
+          "value": [
+            {"modelType": "Property", "idShort": "alert_id",         "valueType": "xs:string", "value": ""},
+            {"modelType": "Property", "idShort": "event_type",       "valueType": "xs:string", "value": "none"},
+            {"modelType": "Property", "idShort": "triggered_field",  "valueType": "xs:string", "value": ""},
+            {"modelType": "Property", "idShort": "rms",              "valueType": "xs:double", "value": "0.0"},
+            {"modelType": "Property", "idShort": "rms_threshold",    "valueType": "xs:double", "value": "0.0"},
+            {"modelType": "Property", "idShort": "timestamp_iso",    "valueType": "xs:string", "value": ""},
+            {"modelType": "Property", "idShort": "timestamp_unix",   "valueType": "xs:double", "value": "0.0"},
+            {"modelType": "Property", "idShort": "aas_written_unix", "valueType": "xs:double", "value": "0.0"}
+          ]
+        }
+      ]
+    },
+    {
+      "modelType": "Submodel",
+      "id": "urn:ilmatar:crane:sm:VideoStream",
+      "idShort": "VideoStream",
+      "displayName": [{"language": "en", "text": "Video Stream Frame (TC-3)"}],
+      "description": [{"language": "en", "text": "640x480 compressed frame at up to 24 fps"}],
+      "submodelElements": [
+        {"modelType": "Property", "idShort": "camera_id",     "valueType": "xs:string", "value": "CAM-001"},
+        {"modelType": "Property", "idShort": "location",      "valueType": "xs:string", "value": "production_cell_A"},
+        {"modelType": "Property", "idShort": "width",         "valueType": "xs:int",    "value": "640"},
+        {"modelType": "Property", "idShort": "height",        "valueType": "xs:int",    "value": "480"},
+        {"modelType": "Property", "idShort": "fps_target",    "valueType": "xs:int",    "value": "24"},
+        {"modelType": "Property", "idShort": "frame_id",      "valueType": "xs:int",    "value": "0"},
+        {"modelType": "Property", "idShort": "format",        "valueType": "xs:string", "value": "RGB_ZLIB"},
+        {"modelType": "Property", "idShort": "timestamp_iso", "valueType": "xs:string", "value": ""}
+      ]
+    }
+  ],
+  "conceptDescriptions": []
+}

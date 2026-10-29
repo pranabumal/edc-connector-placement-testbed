@@ -1,0 +1,58 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Unit: consumer-cp — Consumer Control Plane + its own database
+#
+#   consumer-cp      catalogue requests, contract negotiation, transfer requests
+#   consumer-cp-db   negotiations, agreements, transfer processes, EDRs,
+#                    registered data planes
+#
+# Reaches out to:  provider-cp (${PROVIDER_CP_HOST}:8183, DSP),
+#                  consumer-dp (${CONSUMER_DP_HOST}:9295, data-plane signaling)
+# Reached by:      provider-cp (DSP callbacks :9193), consumer-dp (control :9195),
+#                  scripts / dashboard (management :9192)
+#
+# Start through deploy/deploy.sh, which resolves the *_HOST variables.
+# ─────────────────────────────────────────────────────────────────────────────
+name: consumer-cp
+
+services:
+
+  consumer-cp:
+    extends:
+      file: ../common.yaml
+      service: connector
+    build:
+      context: ../../..
+      dockerfile: docker/Dockerfile.cp
+    image: mvd-cp-runtime
+    container_name: consumer-cp
+    environment:
+      EDC_DATASOURCE_DEFAULT_URL: jdbc:postgresql://consumer-cp-db:5432/consumer_cp
+      EDC_HOSTNAME: "${CONSUMER_CP_HOST:?}"
+      EDC_DSP_CALLBACK_ADDRESS: "http://${CONSUMER_CP_HOST}:9193/protocol"
+      EDC_CONTROL_ENDPOINT: "http://${CONSUMER_CP_HOST}:9195/control"
+      EDC_DATAPLANE_REMOTE_CONTROL_URL: "http://${CONSUMER_DP_HOST:?}:9295/control"
+    command:
+      - -Dedc.fs.config=/config/consumer-cp-config.properties
+      - -jar
+      - /app/cp-connector.jar
+    ports:
+      - "${BIND_ADDR:-0.0.0.0}:9191:9191"   # health / default API
+      - "${BIND_ADDR:-0.0.0.0}:9192:9192"   # management API
+      - "${BIND_ADDR:-0.0.0.0}:9193:9193"   # DSP protocol
+      - "${BIND_ADDR:-0.0.0.0}:9195:9195"   # control API
+    depends_on:
+      consumer-cp-db:
+        condition: service_healthy
+
+  consumer-cp-db:
+    extends:
+      file: ../common.yaml
+      service: postgres
+    container_name: consumer-cp-db
+    environment:
+      POSTGRES_DB: consumer_cp
+    volumes:
+      - consumer-cp-db-data:/var/lib/postgresql/data
+
+volumes:
+  consumer-cp-db-data:

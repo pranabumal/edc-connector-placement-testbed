@@ -1,0 +1,57 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Unit: provider-cp — Provider Control Plane + its own database
+#
+#   provider-cp      catalogue, contract negotiation, transfer management
+#   provider-cp-db   assets, policies, contract definitions, negotiations,
+#                    agreements, transfer processes, registered data planes
+#
+# Reaches out to:  provider-dp (${PROVIDER_DP_HOST}:8285, data-plane signaling)
+# Reached by:      consumer-cp (DSP :8183), provider-dp (control callback :8185),
+#                  scripts / dashboard (management :8182)
+#
+# Start through deploy/deploy.sh, which resolves the *_HOST variables.
+# ─────────────────────────────────────────────────────────────────────────────
+name: provider-cp
+
+services:
+
+  provider-cp:
+    extends:
+      file: ../common.yaml
+      service: connector
+    build:
+      context: ../../..
+      dockerfile: docker/Dockerfile.cp
+    image: mvd-cp-runtime
+    container_name: provider-cp
+    environment:
+      EDC_DATASOURCE_DEFAULT_URL: jdbc:postgresql://provider-cp-db:5432/provider_cp
+      EDC_HOSTNAME: "${PROVIDER_CP_HOST:?}"
+      EDC_DSP_CALLBACK_ADDRESS: "http://${PROVIDER_CP_HOST}:8183/protocol"
+      EDC_CONTROL_ENDPOINT: "http://${PROVIDER_CP_HOST}:8185/control"
+      EDC_DATAPLANE_REMOTE_CONTROL_URL: "http://${PROVIDER_DP_HOST:?}:8285/control"
+    command:
+      - -Dedc.fs.config=/config/provider-cp-config.properties
+      - -jar
+      - /app/cp-connector.jar
+    ports:
+      - "${BIND_ADDR:-0.0.0.0}:8181:8181"   # health / default API
+      - "${BIND_ADDR:-0.0.0.0}:8182:8182"   # management API
+      - "${BIND_ADDR:-0.0.0.0}:8183:8183"   # DSP protocol
+      - "${BIND_ADDR:-0.0.0.0}:8185:8185"   # control API (provider-dp reports transfer state here)
+    depends_on:
+      provider-cp-db:
+        condition: service_healthy
+
+  provider-cp-db:
+    extends:
+      file: ../common.yaml
+      service: postgres
+    container_name: provider-cp-db
+    environment:
+      POSTGRES_DB: provider_cp
+    volumes:
+      - provider-cp-db-data:/var/lib/postgresql/data
+
+volumes:
+  provider-cp-db-data:

@@ -1,0 +1,55 @@
+%%{init: {'theme': 'neutral', 'themeVariables': {'noteBkgColor': '#fff6bf', 'noteBorderColor': '#c9b200', 'noteTextColor': '#222222'}, 'sequence': {'actorMargin': 35, 'messageMargin': 22, 'boxMargin': 6}}}%%
+sequenceDiagram
+    autonumber
+    box rgb(238,238,238) Consumer - Contabo
+    participant R as Consumer application
+    participant RX as Receiver
+    participant CC as Consumer CP
+    participant CD as Consumer DP
+    end
+    box rgb(226,240,255) cPouta - cloud
+    participant PC as Provider CP
+    participant PD as Provider DP
+    end
+    box rgb(240,234,250) TAU VM 2 - data source
+    participant S as Data source
+    end
+
+    Note over R,S: Cloud: provider CP and DP on cPouta
+    Note over R,S: Network RTT: consumer to provider CP 46 ms | provider CP to DP same host | provider DP to source 8 ms | provider DP to consumer 46 ms
+    Note over R,S: Push, stock EDC 0.14.1, EDC wait 50 ms, 4 CPU / 4 GB per connector
+    Note over R,RX: Consumer data platform, simulated
+    Note over CD: Not used in a push
+
+    rect rgb(255,235,210)
+    Note over R,S: TC3: video frame, 473,603 B (source /tc3/video-frame)
+    R->>CC: Catalog request
+    CC->>PC: Catalog request (DSP)
+    PC-->>CC: Catalog with offers
+    CC-->>R: Catalog with offers
+    Note over R,PC: 1) Catalog: 192 ms
+    R->>CC: Start negotiation
+    CC->>PC: Contract request
+    PC-->>CC: Contract agreement
+    CC->>PC: Verify agreement
+    PC-->>CC: Agreement finalized
+    loop negotiationPoll
+        R->>CC: Poll state, every 0.1 s
+    end
+    Note over R,PC: 2) Negotiation, once: 1,954 ms
+    loop 20 transfers
+        R->>CC: Start push transfer, destination = receiver
+        CC->>PC: Transfer request
+        Note over CC,PC: a) request to provider CP: 103 ms
+        PC->>PD: Start data flow
+        PC-->>CC: Transfer start
+        Note over PC,PD: b) provider CP to DP: 41 ms
+        PD->>S: GET payload
+        Note over PD,S: c) DP to source: 42 ms
+        S-->>PD: Payload
+        PD->>RX: POST payload
+        Note over RX,S: d) source to receiver: 524 ms
+    end
+    Note over R,S: 3) One transfer, request to received: 707 ms median (615 ms to 938 ms)
+    Note over R,S: TC3 to first data: 2,849 ms, then one transfer per piece of data
+    end

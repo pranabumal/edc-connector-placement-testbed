@@ -1,0 +1,121 @@
+%%{init: {'theme': 'neutral', 'themeVariables': {'noteBkgColor': '#fff6bf', 'noteBorderColor': '#c9b200', 'noteTextColor': '#222222'}, 'sequence': {'actorMargin': 35, 'messageMargin': 22, 'boxMargin': 6}}}%%
+sequenceDiagram
+    autonumber
+    box rgb(238,238,238) Consumer - Contabo
+    participant R as Consumer application
+    participant RX as Receiver
+    participant CC as Consumer CP
+    participant CD as Consumer DP
+    end
+    box rgb(255,246,222) TAU VM 1 - edge
+    participant PC as Provider CP
+    participant PD as Provider DP
+    end
+    box rgb(240,234,250) TAU VM 2 - data source
+    participant S as Data source
+    end
+
+    Note over R,S: Edge: provider CP and DP on TAU VM 1
+    Note over R,S: Network RTT: consumer to provider CP 40 ms | provider CP to DP same host | provider DP to source 3 ms | provider DP to consumer 40 ms
+    Note over R,S: Push, stock EDC 0.14.1, EDC wait 50 ms, 4 CPU / 4 GB per connector
+    Note over R,RX: Consumer data platform, simulated
+    Note over CD: Not used in a push
+
+    rect rgb(220,235,255)
+    Note over R,S: TC1: control signal, 272 B (source /tc1/control-signal)
+    R->>CC: Catalog request
+    CC->>PC: Catalog request (DSP)
+    PC-->>CC: Catalog with offers
+    CC-->>R: Catalog with offers
+    Note over R,PC: 1) Catalog: 1,051 ms
+    R->>CC: Start negotiation
+    CC->>PC: Contract request
+    PC-->>CC: Contract agreement
+    CC->>PC: Verify agreement
+    PC-->>CC: Agreement finalized
+    loop negotiationPoll
+        R->>CC: Poll state, every 0.1 s
+    end
+    Note over R,PC: 2) Negotiation, once: 2,747 ms
+    loop 20 transfers
+        R->>CC: Start push transfer, destination = receiver
+        CC->>PC: Transfer request
+        Note over CC,PC: a) request to provider CP: 124 ms
+        PC->>PD: Start data flow
+        PC-->>CC: Transfer start
+        Note over PC,PD: b) provider CP to DP: 66 ms
+        PD->>S: GET payload
+        Note over PD,S: c) DP to source: 43 ms
+        S-->>PD: Payload
+        PD->>RX: POST payload
+        Note over RX,S: d) source to receiver: 70 ms
+    end
+    Note over R,S: 3) One transfer, request to received: 305 ms median (222 ms to 638 ms)
+    Note over R,S: TC1 to first data: 4,436 ms, then one transfer per piece of data
+    end
+
+    rect rgb(220,255,225)
+    Note over R,S: TC2: sensor batch, 9,640 B (source /tc2/sensor-batch)
+    R->>CC: Catalog request
+    CC->>PC: Catalog request (DSP)
+    PC-->>CC: Catalog with offers
+    CC-->>R: Catalog with offers
+    Note over R,PC: 1) Catalog: 202 ms
+    R->>CC: Start negotiation
+    CC->>PC: Contract request
+    PC-->>CC: Contract agreement
+    CC->>PC: Verify agreement
+    PC-->>CC: Agreement finalized
+    loop negotiationPoll
+        R->>CC: Poll state, every 0.1 s
+    end
+    Note over R,PC: 2) Negotiation, once: 2,740 ms
+    loop 20 transfers
+        R->>CC: Start push transfer, destination = receiver
+        CC->>PC: Transfer request
+        Note over CC,PC: a) request to provider CP: 99 ms
+        PC->>PD: Start data flow
+        PC-->>CC: Transfer start
+        Note over PC,PD: b) provider CP to DP: 88 ms
+        PD->>S: GET payload
+        Note over PD,S: c) DP to source: 45 ms
+        S-->>PD: Payload
+        PD->>RX: POST payload
+        Note over RX,S: d) source to receiver: 114 ms
+    end
+    Note over R,S: 3) One transfer, request to received: 337 ms median (241 ms to 913 ms)
+    Note over R,S: TC2 to first data: 3,301 ms, then one transfer per piece of data
+    end
+
+    rect rgb(255,235,210)
+    Note over R,S: TC3: video frame, 473,603 B (source /tc3/video-frame)
+    R->>CC: Catalog request
+    CC->>PC: Catalog request (DSP)
+    PC-->>CC: Catalog with offers
+    CC-->>R: Catalog with offers
+    Note over R,PC: 1) Catalog: 209 ms
+    R->>CC: Start negotiation
+    CC->>PC: Contract request
+    PC-->>CC: Contract agreement
+    CC->>PC: Verify agreement
+    PC-->>CC: Agreement finalized
+    loop negotiationPoll
+        R->>CC: Poll state, every 0.1 s
+    end
+    Note over R,PC: 2) Negotiation, once: 2,641 ms
+    loop 20 transfers
+        R->>CC: Start push transfer, destination = receiver
+        CC->>PC: Transfer request
+        Note over CC,PC: a) request to provider CP: 100 ms
+        PC->>PD: Start data flow
+        PC-->>CC: Transfer start
+        Note over PC,PD: b) provider CP to DP: 76 ms
+        PD->>S: GET payload
+        Note over PD,S: c) DP to source: 42 ms
+        S-->>PD: Payload
+        PD->>RX: POST payload
+        Note over RX,S: d) source to receiver: 480 ms
+    end
+    Note over R,S: 3) One transfer, request to received: 697 ms median (616 ms to 977 ms)
+    Note over R,S: TC3 to first data: 3,582 ms, then one transfer per piece of data
+    end

@@ -1,0 +1,236 @@
+{
+  "hybrid": {
+    "architecture": "hybrid",
+    "flow": "push",
+    "application_on": "consumer",
+    "run_dir": "../results/20261013T210058-hybrid-tuned-nosync",
+    "timing_profile": "tuned-nosync",
+    "edc_transfer_wait_ms": 50,
+    "provider_cp_role": "cloud",
+    "provider_dp_role": "edge",
+    "rtt_ms": {
+      "consumer_to_provider_cp": 47.876,
+      "provider_cp_to_dp": 7.844,
+      "provider_dp_to_source": 3.462,
+      "consumer_to_provider_dp": 41.663
+    },
+    "test_cases": {
+      "TC1": {
+        "size_bytes": 272,
+        "transfers_requested": 20,
+        "transfers_received": 20,
+        "catalog_ms": 838.0,
+        "negotiation_ms": 2394.0,
+        "request_to_received_median_ms": 291.2,
+        "request_to_received_min_ms": 236.83,
+        "request_to_received_max_ms": 850.43,
+        "first_transfer_ms": 850.43,
+        "first_data_ms": 4082.4,
+        "negotiation_retries": 0,
+        "transfer_retries": 0,
+        "phases_median_ms": {
+          "request_to_provider": 112.89,
+          "provider_to_dp": 56.2,
+          "dp_to_source": 41.11,
+          "source_to_received": 69.21
+        }
+      },
+      "TC2": {
+        "size_bytes": 9640,
+        "transfers_requested": 20,
+        "transfers_received": 20,
+        "catalog_ms": 393.0,
+        "negotiation_ms": 2664.0,
+        "request_to_received_median_ms": 317.38,
+        "request_to_received_min_ms": 249.53,
+        "request_to_received_max_ms": 378.72,
+        "first_transfer_ms": 372.13,
+        "first_data_ms": 3429.1,
+        "negotiation_retries": 0,
+        "transfer_retries": 0,
+        "phases_median_ms": {
+          "request_to_provider": 101.61,
+          "provider_to_dp": 68.68,
+          "dp_to_source": 37.01,
+          "source_to_received": 113.44
+        }
+      },
+      "TC3": {
+        "size_bytes": 473603,
+        "transfers_requested": 20,
+        "transfers_received": 20,
+        "catalog_ms": 191.0,
+        "negotiation_ms": 2154.0,
+        "request_to_received_median_ms": 695.33,
+        "request_to_received_min_ms": 603.84,
+        "request_to_received_max_ms": 979.79,
+        "first_transfer_ms": 651.86,
+        "first_data_ms": 2996.9,
+        "negotiation_retries": 0,
+        "transfer_retries": 0,
+        "phases_median_ms": {
+          "request_to_provider": 99.58,
+          "provider_to_dp": 44.17,
+          "dp_to_source": 42.04,
+          "source_to_received": 478.67
+        }
+      }
+    }
+  },
+  "edge": {
+    "architecture": "edge",
+    "flow": "push",
+    "application_on": "consumer",
+    "run_dir": "../results/20261014T010058-edge-tuned-nosync",
+    "timing_profile": "tuned-nosync",
+    "edc_transfer_wait_ms": 50,
+    "provider_cp_role": "edge",
+    "provider_dp_role": "edge",
+    "rtt_ms": {
+      "consumer_to_provider_cp": 40.017,
+      "provider_cp_to_dp": null,
+      "provider_dp_to_source": 3.218,
+      "consumer_to_provider_dp": 40.017
+    },
+    "test_cases": {
+      "TC1": {
+        "size_bytes": 272,
+        "transfers_requested": 20,
+        "transfers_received": 20,
+        "catalog_ms": 1051.0,
+        "negotiation_ms": 2747.0,
+        "request_to_received_median_ms": 304.55,
+        "request_to_received_min_ms": 221.58,
+        "request_to_received_max_ms": 638.22,
+        "first_transfer_ms": 638.22,
+        "first_data_ms": 4436.2,
+        "negotiation_retries": 0,
+        "transfer_retries": 0,
+        "phases_median_ms": {
+          "request_to_provider": 123.93,
+          "provider_to_dp": 65.5,
+          "dp_to_source": 42.91,
+          "source_to_received": 69.74
+        }
+      },
+      "TC2": {
+        "size_bytes": 9640,
+        "transfers_requested": 20,
+        "transfers_received": 20,
+        "catalog_ms": 202.0,
+        "negotiation_ms": 2740.0,
+        "request_to_received_median_ms": 337.14,
+        "request_to_received_min_ms": 240.94,
+        "request_to_received_max_ms": 913.43,
+        "first_transfer_ms": 359.27,
+        "first_data_ms": 3301.3,
+        "negotiation_retries": 0,
+        "transfer_retries": 0,
+        "phases_median_ms": {
+          "request_to_provider": 99.46,
+          "provider_to_dp": 88.0,
+          "dp_to_source": 45.03,
+          "source_to_received": 113.73
+        }
+      },
+      "TC3": {
+        "size_bytes": 473603,
+        "transfers_requested": 20,
+        "transfers_received": 20,
+        "catalog_ms": 209.0,
+        "negotiation_ms": 2641.0,
+        "request_to_received_median_ms": 696.58,
+        "request_to_received_min_ms": 615.8,
+        "request_to_received_max_ms": 977.35,
+        "first_transfer_ms": 731.94,
+        "first_data_ms": 3581.9,
+        "negotiation_retries": 0,
+        "transfer_retries": 0,
+        "phases_median_ms": {
+          "request_to_provider": 99.56,
+          "provider_to_dp": 75.5,
+          "dp_to_source": 41.92,
+          "source_to_received": 480.2
+        }
+      }
+    }
+  },
+  "cloud": {
+    "architecture": "cloud",
+    "flow": "push",
+    "application_on": "consumer",
+    "run_dir": "../results/20261014T011024-cloud-tuned-nosync",
+    "timing_profile": "tuned-nosync",
+    "edc_transfer_wait_ms": 50,
+    "provider_cp_role": "cloud",
+    "provider_dp_role": "cloud",
+    "rtt_ms": {
+      "consumer_to_provider_cp": 45.725,
+      "provider_cp_to_dp": null,
+      "provider_dp_to_source": 7.851,
+      "consumer_to_provider_dp": 45.725
+    },
+    "test_cases": {
+      "TC1": {
+        "size_bytes": 272,
+        "transfers_requested": 20,
+        "transfers_received": 20,
+        "catalog_ms": 1116.0,
+        "negotiation_ms": 2860.0,
+        "request_to_received_median_ms": 292.92,
+        "request_to_received_min_ms": 241.97,
+        "request_to_received_max_ms": 633.54,
+        "first_transfer_ms": 633.54,
+        "first_data_ms": 4609.5,
+        "negotiation_retries": 0,
+        "transfer_retries": 0,
+        "phases_median_ms": {
+          "request_to_provider": 122.96,
+          "provider_to_dp": 49.5,
+          "dp_to_source": 45.12,
+          "source_to_received": 78.72
+        }
+      },
+      "TC2": {
+        "size_bytes": 9640,
+        "transfers_requested": 20,
+        "transfers_received": 20,
+        "catalog_ms": 236.0,
+        "negotiation_ms": 2094.0,
+        "request_to_received_median_ms": 331.02,
+        "request_to_received_min_ms": 265.57,
+        "request_to_received_max_ms": 425.72,
+        "first_transfer_ms": 295.43,
+        "first_data_ms": 2625.4,
+        "negotiation_retries": 0,
+        "transfer_retries": 0,
+        "phases_median_ms": {
+          "request_to_provider": 108.39,
+          "provider_to_dp": 47.0,
+          "dp_to_source": 41.76,
+          "source_to_received": 129.62
+        }
+      },
+      "TC3": {
+        "size_bytes": 473603,
+        "transfers_requested": 20,
+        "transfers_received": 20,
+        "catalog_ms": 192.0,
+        "negotiation_ms": 1954.0,
+        "request_to_received_median_ms": 707.22,
+        "request_to_received_min_ms": 615.4,
+        "request_to_received_max_ms": 937.83,
+        "first_transfer_ms": 703.4,
+        "first_data_ms": 2849.4,
+        "negotiation_retries": 0,
+        "transfer_retries": 0,
+        "phases_median_ms": {
+          "request_to_provider": 102.52,
+          "provider_to_dp": 41.0,
+          "dp_to_source": 41.89,
+          "source_to_received": 524.49
+        }
+      }
+    }
+  }
+}

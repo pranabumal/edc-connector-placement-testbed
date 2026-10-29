@@ -1,0 +1,25 @@
+%% F4.5 Push transfer (HttpData-PUSH) in stock EDC 0.14.1, one message; no measured values
+sequenceDiagram
+  autonumber
+  participant APP as Consumer application
+  participant CCP as Consumer CP
+  participant PCP as Provider CP
+  participant PDP as Provider DP
+  participant SRC as Data source
+  participant RCV as Data receiver
+  Note over APP,PCP: Once per contract
+  APP->>CCP: catalogue request
+  CCP->>PCP: DSP catalogue request
+  PCP-->>CCP: catalogue (offers)
+  APP->>CCP: negotiate offer
+  CCP->>PCP: DSP contract negotiation
+  PCP-->>CCP: contract agreement
+  Note over APP,RCV: Once per message
+  APP->>CCP: transfer request (HttpData-PUSH, destination = receiver)
+  CCP->>PCP: DSP transfer request
+  PCP->>PDP: data plane signalling: start
+  PDP->>SRC: GET data
+  SRC-->>PDP: payload
+  PDP->>RCV: POST payload
+  PDP-->>PCP: transfer completed
+  PCP-->>CCP: DSP transfer completion

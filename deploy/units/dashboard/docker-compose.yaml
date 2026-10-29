@@ -1,0 +1,69 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Unit: dashboard — observer tooling, not part of the dataspace
+#
+#   ui-api        FastAPI backend: proxies both management APIs, runs tests
+#   ui-provider   Provider dashboard   http://<host>:3000
+#   ui-consumer   Consumer dashboard   http://<host>:3002
+#
+# Talks to every connector unit through its host address, so it can run on any
+# machine that reaches them. Not in the timed transfer path.
+#
+# Start through deploy/deploy.sh, which resolves the *_HOST variables.
+# ─────────────────────────────────────────────────────────────────────────────
+name: dashboard
+
+services:
+
+  ui-api:
+    build:
+      context: ../../../docker/ui-api
+    container_name: ui-api
+    ports:
+      - "${BIND_ADDR:-0.0.0.0}:8090:8090"
+    volumes:
+      - ui-api-data:/data   # SQLite run history
+    environment:
+      DB_PATH: /data/consumer.db
+      PROVIDER_MGMT: "http://${PROVIDER_CP_HOST:?}:8182/management/v3"
+      PROVIDER_DSP: "http://${PROVIDER_CP_HOST}:8183/protocol"
+      CONSUMER_MGMT: "http://${CONSUMER_CP_HOST:?}:9192/management/v3"
+      RECEIVER_BASE: "http://${CONSUMER_DP_HOST:?}:4000"
+      # The data source runs on its own machine (provider-source unit): assets
+      # the dashboard registers point there, and it triggers TC-4 there.
+      SIMULATOR_INTERNAL: "http://${SOURCE_HOST:?}:5050"
+      SIMULATOR_URL: "http://${SOURCE_HOST}:5050"
+      BASYX_AAS_BASE: "http://${SOURCE_HOST}:8091"
+      TC4_SOURCE: aas
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8090/api/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  ui-provider:
+    build:
+      context: ../../../docker/ui-provider
+    container_name: ui-provider
+    ports:
+      - "${BIND_ADDR:-0.0.0.0}:3000:80"
+    depends_on:
+      ui-api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  ui-consumer:
+    build:
+      context: ../../../docker/ui-consumer
+    container_name: ui-consumer
+    ports:
+      - "${BIND_ADDR:-0.0.0.0}:3002:80"
+    depends_on:
+      ui-api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  ui-api-data:

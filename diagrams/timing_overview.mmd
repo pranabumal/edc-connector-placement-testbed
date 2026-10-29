@@ -1,0 +1,33 @@
+%%{init: {'theme': 'neutral', 'flowchart': {'nodeSpacing': 40, 'rankSpacing': 90}}}%%
+flowchart LR
+    subgraph CLOUD["Cloud: provider CP and DP on cPouta"]
+        direction LR
+        c0(["Start"])
+        c0 -->|"TC1: 4,569 ms"| c1["TC1 done"]
+        c1 -->|"TC2: 3,090 ms"| c2["TC2 done"]
+        c2 -->|"TC3: 3,953 ms"| c3["TC3 done"]
+    end
+    subgraph EDGE["Edge: provider CP and DP on TAU VM 1"]
+        direction LR
+        e0(["Start"])
+        e0 -->|"TC1: 4,415 ms"| e1["TC1 done"]
+        e1 -->|"TC2: 3,618 ms"| e2["TC2 done"]
+        e2 -->|"TC3: 3,620 ms"| e3["TC3 done"]
+    end
+    subgraph HYBRID["Hybrid: provider CP on cPouta, DP on TAU VM 1"]
+        direction LR
+        h0(["Start"])
+        h0 -->|"TC1: 5,147 ms"| h1["TC1 done"]
+        h1 -->|"TC2: 2,953 ms"| h2["TC2 done"]
+        h2 -->|"TC3: 3,909 ms"| h3["TC3 done"]
+    end
+
+    linkStyle 0 stroke:#1f77b4,stroke-width:3px
+    linkStyle 1 stroke:#2ca02c,stroke-width:3px
+    linkStyle 2 stroke:#ff7f0e,stroke-width:3px
+    linkStyle 3 stroke:#1f77b4,stroke-width:3px
+    linkStyle 4 stroke:#2ca02c,stroke-width:3px
+    linkStyle 5 stroke:#ff7f0e,stroke-width:3px
+    linkStyle 6 stroke:#1f77b4,stroke-width:3px
+    linkStyle 7 stroke:#2ca02c,stroke-width:3px
+    linkStyle 8 stroke:#ff7f0e,stroke-width:3px
