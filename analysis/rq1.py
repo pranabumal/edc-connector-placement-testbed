@@ -533,7 +533,7 @@ def fig_r5():
                 if v.max() > top[tc]:
                     ax.plot([x], [top[tc]], marker="^", ms=3.5, color="#333333", clip_on=False, zorder=5)
                     ax.annotate(f"{v.max() / 1000:.2f}", (x, top[tc]), xytext=(0, 4), textcoords="offset points",
-                                rotation=90, ha="center", va="bottom", fontsize=6.5 * FS, color="#333333")
+                                rotation=90, ha="center", va="bottom", fontsize=8 * FS, color="#333333")
                 else:
                     ax.plot([x], [v.max()], marker="^", ms=3.5, color="#333333", zorder=5)
         ax.set_xticks(range(3), [LABEL[p] for p in PLACEMENTS], rotation=25, ha="right", rotation_mode="anchor")

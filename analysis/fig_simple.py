@@ -42,7 +42,7 @@ def fig_modes():
                 ax.bar(x, s["median"], width=w * 0.92, color=MODE_COL[mode], edgecolor="white", lw=0.5)
                 ax.plot([x, x], [s["q1"], s["q3"]], color="black", lw=0.9)
                 ax.text(x, s["q3"], f" {s['median']:.0f}",
-                        rotation=90, ha="center", va="bottom", fontsize=6.5 * FS)
+                        rotation=90, ha="center", va="bottom", fontsize=8 * FS)
                 ymax = max(ymax, s["q3"])
         ax.set_ylim(0, ymax * 1.28)
         ax.set_xticks(range(3), [LABEL[p] for p in PLACEMENTS])
@@ -87,7 +87,7 @@ def fig_phases():
                     h = data[key]["median"]
                     ax.bar(x, h, bottom=bottom, width=w, color=col, edgecolor="white", lw=0.6)
                     bottom += h
-                ax.text(x, bottom, "push" if k == 0 else "pull", ha="center", va="bottom", fontsize=6.5 * FS)
+                ax.text(x, bottom, "push" if k == 0 else "pull", ha="center", va="bottom", fontsize=8 * FS)
         ax.set_xticks(range(3), [LABEL[p] for p in PLACEMENTS])
         ax.set_ylim(0, ax.get_ylim()[1] * 1.08)
         ax.set_title(TC_LABEL[tc])
