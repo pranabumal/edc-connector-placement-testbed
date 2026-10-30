@@ -201,7 +201,7 @@ def fig_rate():
                 ax.bar(x, mean, width=w * 0.9, color="white" if m == "par" else col, edgecolor=col,
                        hatch="////" if m == "par" else None, lw=1)
                 ax.errorbar(x, mean, yerr=[[mean - min(v)], [max(v) - mean]], color="black", lw=0.8, capsize=2)
-                if m == "seq":       # one worker can fetch at most once per fetch time
+                if m == "seq":       # reference: one fetch per median fetch time (not a strict limit)
                     ceil = 100 * 1000 / B[f"{p}-{m}-{tc}"]["pooled_median_fetch_ms"] / target
                     if ceil < 108:
                         ax.plot([x - w * 0.55, x + w * 0.55], [ceil, ceil], color="black", lw=1.4, ls=":", zorder=5)
@@ -215,7 +215,7 @@ def fig_rate():
         Patch(facecolor="white", edgecolor="0.4", hatch="////", label="same, 4 workers"),
         Patch(color=COLOR["source"], label="no EDC, 1 worker (baseline)"),
         Line2D([], [], color="black", ls="--", lw=0.8, label="pass: 99 % of the target rate"),
-        Line2D([], [], color="black", ls=":", lw=1.2, label="limit of one worker: 1 / fetch time"),
+        Line2D([], [], color="black", ls=":", lw=1.2, label="reference: 1 / median fetch time"),
         Line2D([], [], color="black", lw=0.8, marker="_", ms=6, label="bar: mean of 3 runs; whisker: min-max")]
     fig.legend(handles=hs, loc="lower center", ncol=2, frameon=False, fontsize=7 * FS, bbox_to_anchor=(0.5, -0.27))
     fig.tight_layout()
